@@ -1,0 +1,10 @@
+agents:
+  my-agent:
+    name: Yangyang
+    model: claude-opus-4-6
+    mcpServers: your-mcp-server
+    temperature: 0.7
+
+mcpServers:
+  your-mcp-server:
+    url: https://your-mcp-server.example.com/mcp
