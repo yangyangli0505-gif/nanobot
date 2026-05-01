@@ -192,6 +192,112 @@ nanobot agent
 - Want to run nanobot in chat apps like Telegram, Discord, WeChat or Feishu? See [Chat Apps](./docs/chat-apps.md)
 - Want Docker or Linux service deployment? See [Deployment](./docs/deployment.md)
 
+## 🧩 What this fork adds: AI Tech Intelligence integration
+
+This fork is no longer just the upstream nanobot runtime. It now includes a **built-in AI tech intelligence capability** for tracking AI / LLM / Agent updates and delivering scheduled briefs.
+
+### In plain words
+
+The original nanobot gives you the **runtime**:
+- agent loop
+- tools
+- commands
+- cron
+- channels (Telegram / Discord / ...)
+- long-running gateway
+
+This fork adds a **vertical app on top of that runtime**:
+- collect updates from selected AI sources
+- classify them
+- rank what matters
+- compare with the previous snapshot
+- generate a daily brief / midday recap
+- deliver the result through nanobot channels
+
+So the secondary development here is **not** “rewriting nanobot from scratch”.
+It is:
+
+> using nanobot's framework to turn an external AI-news pipeline into a built-in, configurable, schedulable nanobot capability.
+
+### What was actually added in code
+
+This fork adds these pieces:
+
+#### 1. A new built-in module
+- `nanobot/ai_intel/`
+- contains ingestion, dedup, topic classification, signal ranking, change detection, report generation, and optional LLM enrichment logic
+
+#### 2. A new built-in tool
+- `ai_intel`
+- supports actions such as:
+  - `daily_brief`
+  - `midday_recap`
+  - `refresh`
+
+This means the nanobot agent can call AI-intelligence generation like any other internal tool.
+
+#### 3. New slash commands
+- `/intel-daily`
+- `/intel-recap`
+- `/intel-refresh`
+- `/intel-schedule-daily`
+- `/intel-schedule-midday`
+
+This gives you both:
+- manual CLI / chat triggering
+- scheduled delivery setup
+
+#### 4. Runtime state integration
+- AI intel snapshots are stored under nanobot runtime state instead of living beside source code
+- source path can be overridden by config / env
+
+#### 5. Config integration
+A new config block was added under `tools.aiIntel`, including:
+- `enabled`
+- `stateDir`
+- `sourcesPath`
+- `channel`
+- `chatId`
+- `daily.enabled`
+- `daily.cron`
+- `midday.enabled`
+- `midday.cron`
+
+#### 6. Cron integration
+When gateway starts, this fork can auto-register:
+- `ai-intel-daily`
+- `ai-intel-midday`
+
+So the reports are not just generated manually — they can become part of nanobot's long-running scheduled workflow.
+
+### Why this matters
+
+Before this work, the AI intelligence project was basically an external Python pipeline.
+After this integration, it becomes:
+
+- callable inside nanobot
+- routable through nanobot commands
+- configurable in nanobot config
+- schedulable through nanobot cron
+- deliverable through nanobot channels
+
+In short:
+
+> upstream nanobot = general agent runtime  
+> this fork = nanobot runtime + built-in AI tech intelligence app
+
+### Current status
+
+This integration already includes:
+- internal module wiring
+- tool registration
+- command registration
+- config support
+- cron auto-registration
+- focused test coverage for command dispatch and tool schema
+
+It is already beyond “just an external script”, but it is still an evolving application layer on top of nanobot.
+
 ## 🧪 WebUI (Development)
 
 > [!NOTE]
