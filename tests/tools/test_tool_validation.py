@@ -14,6 +14,7 @@ from nanobot.agent.tools import (
 )
 from nanobot.agent.tools.base import Tool
 from nanobot.agent.tools.registry import ToolRegistry
+from nanobot.agent.tools.ai_intel import AITechIntelTool
 from nanobot.agent.tools.shell import ExecTool
 
 
@@ -658,3 +659,9 @@ def test_cast_nullable_param_no_crash() -> None:
     assert result["name"] == "hello"
     result = tool.cast_params({"name": None})
     assert result["name"] is None
+
+
+def test_ai_intel_tool_schema() -> None:
+    tool = AITechIntelTool()
+    assert tool.name == "ai_intel"
+    assert tool.parameters["properties"]["action"]["enum"] == ["daily_brief", "midday_recap", "refresh"]

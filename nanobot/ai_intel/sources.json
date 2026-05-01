@@ -1,0 +1,29 @@
+[
+  {
+    "name": "openai_blog",
+    "kind": "rss",
+    "url": "https://openai.com/news/rss.xml",
+    "enabled": true,
+    "tags": ["official", "openai", "model_release"],
+    "fetch_interval_min": 60,
+    "metadata": {}
+  },
+  {
+    "name": "google_blog_ai",
+    "kind": "rss",
+    "url": "https://blog.google/technology/ai/rss/",
+    "enabled": true,
+    "tags": ["official", "google", "agent", "infra_compute"],
+    "fetch_interval_min": 60,
+    "metadata": {}
+  },
+  {
+    "name": "huggingface_blog",
+    "kind": "rss",
+    "url": "https://huggingface.co/blog/feed.xml",
+    "enabled": true,
+    "tags": ["official", "open_source_model", "eval_safety"],
+    "fetch_interval_min": 60,
+    "metadata": {}
+  }
+]

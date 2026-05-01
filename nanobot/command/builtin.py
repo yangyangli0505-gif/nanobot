@@ -7,6 +7,7 @@ import os
 import sys
 
 from nanobot import __version__
+from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_batches, run_ingestion, save_snapshot
 from nanobot.bus.events import OutboundMessage
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.utils.helpers import build_status_content
@@ -380,6 +381,35 @@ async def cmd_help(ctx: CommandContext) -> OutboundMessage:
     )
 
 
+async def _build_ai_intel_content(mode: str) -> str:
+    batches = run_ingestion()
+    merged = merge_batches(batches)
+    previous = load_snapshot()
+    changes = diff_events(merged, previous)
+    save_snapshot(merged)
+    return generate_brief(merged, mode=mode, change_summary=changes)
+
+
+async def cmd_intel_daily(ctx: CommandContext) -> OutboundMessage:
+    content = await _build_ai_intel_content("daily")
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
+    )
+
+
+async def cmd_intel_recap(ctx: CommandContext) -> OutboundMessage:
+    content = await _build_ai_intel_content("midday")
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
+    )
+
+
 def build_help_text() -> str:
     """Build canonical help text shared across channels."""
     lines = [
@@ -393,6 +423,8 @@ def build_help_text() -> str:
         "/dream-log — Show what the last Dream changed",
         "/dream-restore — Revert memory to a previous state",
         "/help — Show available commands",
+        "/intel-daily — Generate AI tech daily brief",
+        "/intel-recap — Generate AI tech midday recap",
     ]
     return "\n".join(lines)
 
@@ -412,3 +444,5 @@ def register_builtin_commands(router: CommandRouter) -> None:
     router.exact("/dream-restore", cmd_dream_restore)
     router.prefix("/dream-restore ", cmd_dream_restore)
     router.exact("/help", cmd_help)
+    router.exact("/intel-daily", cmd_intel_daily)
+    router.exact("/intel-recap", cmd_intel_recap)
