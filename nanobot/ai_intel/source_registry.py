@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -13,10 +14,12 @@ except ImportError:
 
 
 DEFAULT_SOURCES_PATH = Path(__file__).with_name("sources.json")
+ENV_SOURCES_PATH = "NANOBOT_AI_INTEL_SOURCES_PATH"
 
 
 def load_sources(path: str | Path | None = None) -> list[SourceConfig]:
-    p = Path(path) if path else DEFAULT_SOURCES_PATH
+    chosen = path or os.getenv(ENV_SOURCES_PATH)
+    p = Path(chosen) if chosen else DEFAULT_SOURCES_PATH
     data = json.loads(p.read_text(encoding="utf-8"))
     return [SourceConfig(**item) for item in data]
 

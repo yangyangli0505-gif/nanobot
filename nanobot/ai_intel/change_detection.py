@@ -6,13 +6,15 @@ import json
 from pathlib import Path
 from typing import Any
 
+from nanobot.config.paths import get_runtime_subdir
+
 try:
     from .models import IntelligenceEvent
 except ImportError:
     from models import IntelligenceEvent
 
 
-DEFAULT_STATE_DIR = Path(__file__).with_name("state")
+DEFAULT_STATE_DIR = get_runtime_subdir("ai_intel")
 DEFAULT_SNAPSHOT_PATH = DEFAULT_STATE_DIR / "latest_snapshot.json"
 
 

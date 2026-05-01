@@ -410,6 +410,25 @@ async def cmd_intel_recap(ctx: CommandContext) -> OutboundMessage:
     )
 
 
+async def cmd_intel_refresh(ctx: CommandContext) -> OutboundMessage:
+    batches = run_ingestion()
+    merged = merge_batches(batches)
+    previous = load_snapshot()
+    changes = diff_events(merged, previous)
+    save_snapshot(merged)
+    content = (
+        f"AI intel refresh complete. events={len(merged)} "
+        f"added={len(changes.get("added", []))} repeated={len(changes.get("repeated", []))} "
+        f"escalated={len(changes.get("escalated", []))}"
+    )
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
+    )
+
+
 def build_help_text() -> str:
     """Build canonical help text shared across channels."""
     lines = [
@@ -425,6 +444,7 @@ def build_help_text() -> str:
         "/help — Show available commands",
         "/intel-daily — Generate AI tech daily brief",
         "/intel-recap — Generate AI tech midday recap",
+        "/intel-refresh — Refresh AI intel snapshot and counts",
     ]
     return "\n".join(lines)
 
@@ -446,3 +466,4 @@ def register_builtin_commands(router: CommandRouter) -> None:
     router.exact("/help", cmd_help)
     router.exact("/intel-daily", cmd_intel_daily)
     router.exact("/intel-recap", cmd_intel_recap)
+    router.exact("/intel-refresh", cmd_intel_refresh)

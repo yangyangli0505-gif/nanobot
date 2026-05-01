@@ -13,8 +13,7 @@ from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_b
 @tool_parameters(
     tool_parameters_schema(
         action=StringSchema(
-            "daily_brief",
-            description="Action to run: daily_brief | midday_recap | refresh",
+            "Action to run: daily_brief | midday_recap | refresh",
             enum=["daily_brief", "midday_recap", "refresh"],
         ),
         required=["action"],
