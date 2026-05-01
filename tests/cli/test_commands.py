@@ -1553,3 +1553,30 @@ def test_channels_login_requires_channel_name() -> None:
     result = runner.invoke(app, ["channels", "login"])
 
     assert result.exit_code == 2
+
+
+def test_register_ai_intel_system_jobs() -> None:
+    from nanobot.cli.commands import _register_ai_intel_system_jobs
+
+    config = Config()
+    config.tools.ai_intel.enabled = True
+    config.tools.ai_intel.channel = "telegram"
+    config.tools.ai_intel.chat_id = "user-1"
+
+    class _FakeCron:
+        def __init__(self) -> None:
+            self.jobs = []
+
+        def register_system_job(self, job):
+            self.jobs.append(job)
+            return job
+
+    cron = _FakeCron()
+    lines = _register_ai_intel_system_jobs(cron, config)
+
+    ids = {job.id for job in cron.jobs}
+    assert "ai-intel-daily" in ids
+    assert "ai-intel-midday" in ids
+    assert any("AI intel daily" in line for line in lines)
+    assert any("AI intel midday" in line for line in lines)
+

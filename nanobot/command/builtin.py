@@ -434,6 +434,7 @@ async def cmd_intel_schedule_daily(ctx: CommandContext) -> OutboundMessage:
     if cron_tool is None:
         content = "Cron tool is not available in this runtime."
     else:
+        cron_tool.set_context(ctx.msg.channel, ctx.msg.chat_id, metadata=ctx.msg.metadata, session_key=ctx.key)
         content = cron_tool._add_job(
             name="ai-intel-daily",
             message="Run ai_intel daily_brief and deliver the result.",
@@ -456,6 +457,7 @@ async def cmd_intel_schedule_midday(ctx: CommandContext) -> OutboundMessage:
     if cron_tool is None:
         content = "Cron tool is not available in this runtime."
     else:
+        cron_tool.set_context(ctx.msg.channel, ctx.msg.chat_id, metadata=ctx.msg.metadata, session_key=ctx.key)
         content = cron_tool._add_job(
             name="ai-intel-midday",
             message="Run ai_intel midday_recap and deliver the result.",

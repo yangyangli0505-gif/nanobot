@@ -476,6 +476,54 @@ def _migrate_cron_store(config: "Config") -> None:
         shutil.move(str(legacy_path), str(new_path))
 
 
+def _register_ai_intel_system_jobs(cron, config: Config) -> list[str]:
+    """Register configured AI intel cron jobs and return status lines."""
+    lines: list[str] = []
+    ai_cfg = config.tools.ai_intel
+    if not ai_cfg.enabled:
+        return lines
+    target_channel = ai_cfg.channel
+    target_chat_id = ai_cfg.chat_id
+    if not (target_channel and target_chat_id):
+        return lines
+
+    from nanobot.cron.types import CronJob, CronPayload, CronSchedule
+
+    if ai_cfg.daily.enabled:
+        cron.register_system_job(CronJob(
+            id="ai-intel-daily",
+            name="ai-intel-daily",
+            schedule=CronSchedule(kind="cron", expr=ai_cfg.daily.cron, tz=config.agents.defaults.timezone),
+            payload=CronPayload(
+                kind="agent_turn",
+                message="Run ai_intel daily_brief and deliver the result.",
+                deliver=True,
+                channel=target_channel,
+                to=target_chat_id,
+                session_key=f"{target_channel}:{target_chat_id}",
+            ),
+        ))
+        lines.append(f"AI intel daily: cron {ai_cfg.daily.cron}")
+
+    if ai_cfg.midday.enabled:
+        cron.register_system_job(CronJob(
+            id="ai-intel-midday",
+            name="ai-intel-midday",
+            schedule=CronSchedule(kind="cron", expr=ai_cfg.midday.cron, tz=config.agents.defaults.timezone),
+            payload=CronPayload(
+                kind="agent_turn",
+                message="Run ai_intel midday_recap and deliver the result.",
+                deliver=True,
+                channel=target_channel,
+                to=target_chat_id,
+                session_key=f"{target_channel}:{target_chat_id}",
+            ),
+        ))
+        lines.append(f"AI intel midday: cron {ai_cfg.midday.cron}")
+
+    return lines
+
+
 # ============================================================================
 # OpenAI-Compatible API Server
 # ============================================================================
@@ -499,6 +547,7 @@ def serve(
 
     from loguru import logger
     from nanobot.agent.loop import AgentLoop
+    from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_batches, run_ingestion, save_snapshot
     from nanobot.api.server import create_app
     from nanobot.bus.queue import MessageBus
     from nanobot.session.manager import SessionManager
@@ -598,6 +647,7 @@ def _run_gateway(
 ) -> None:
     """Shared gateway runtime; ``open_browser_url`` opens a tab once channels are up."""
     from nanobot.agent.loop import AgentLoop
+    from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_batches, run_ingestion, save_snapshot
     from nanobot.agent.tools.cron import CronTool
     from nanobot.agent.tools.message import MessageTool
     from nanobot.bus.queue import MessageBus
@@ -712,6 +762,27 @@ def _run_gateway(
             except Exception:
                 logger.exception("Dream cron job failed")
             return None
+
+        if job.name in {"ai-intel-daily", "ai-intel-midday"}:
+            mode = "daily" if job.name == "ai-intel-daily" else "midday"
+            batches = run_ingestion()
+            merged = merge_batches(batches)
+            previous = load_snapshot()
+            changes = diff_events(merged, previous)
+            save_snapshot(merged)
+            report = generate_brief(merged, mode=mode, change_summary=changes)
+            if job.payload.deliver and job.payload.to:
+                await _deliver_to_channel(
+                    OutboundMessage(
+                        channel=job.payload.channel or "cli",
+                        chat_id=job.payload.to,
+                        content=report,
+                        metadata=dict(job.payload.channel_meta),
+                    ),
+                    record=True,
+                    session_key=job.payload.session_key,
+                )
+            return report
 
         from nanobot.utils.evaluator import evaluate_response
 
@@ -924,6 +995,9 @@ def _run_gateway(
     ))
     console.print(f"[green]✓[/green] Dream: {dream_cfg.describe_schedule()}")
 
+    for line in _register_ai_intel_system_jobs(cron, config):
+        console.print(f"[green]✓[/green] {line}")
+
     async def _open_browser_when_ready() -> None:
         """Wait for the gateway to bind, then point the user's browser at the webui."""
         if not open_browser_url:
@@ -1002,6 +1076,7 @@ def agent(
     from loguru import logger
 
     from nanobot.agent.loop import AgentLoop
+    from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_batches, run_ingestion, save_snapshot
     from nanobot.bus.queue import MessageBus
     from nanobot.cron.service import CronService
 

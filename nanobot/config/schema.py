@@ -249,6 +249,8 @@ class AITechIntelConfig(Base):
     enabled: bool = True
     state_dir: str = ""
     sources_path: str = ""
+    channel: str = ""
+    chat_id: str = ""
     daily: AITelReportConfig = Field(default_factory=AITelReportConfig)
     midday: AITelReportConfig = Field(default_factory=lambda: AITelReportConfig(cron="0 15 * * *"))
 
