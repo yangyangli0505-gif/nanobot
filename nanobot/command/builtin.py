@@ -8,6 +8,7 @@ import sys
 
 from nanobot import __version__
 from nanobot.ai_intel import diff_events, generate_brief, load_snapshot, merge_batches, run_ingestion, save_snapshot
+from nanobot.cron.types import CronSchedule
 from nanobot.bus.events import OutboundMessage
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.utils.helpers import build_status_content
@@ -418,8 +419,8 @@ async def cmd_intel_refresh(ctx: CommandContext) -> OutboundMessage:
     save_snapshot(merged)
     content = (
         f"AI intel refresh complete. events={len(merged)} "
-        f"added={len(changes.get("added", []))} repeated={len(changes.get("repeated", []))} "
-        f"escalated={len(changes.get("escalated", []))}"
+        f"added={len(changes.get('added', []))} repeated={len(changes.get('repeated', []))} "
+        f"escalated={len(changes.get('escalated', []))}"
     )
     return OutboundMessage(
         channel=ctx.msg.channel,
@@ -427,6 +428,50 @@ async def cmd_intel_refresh(ctx: CommandContext) -> OutboundMessage:
         content=content,
         metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
     )
+
+async def cmd_intel_schedule_daily(ctx: CommandContext) -> OutboundMessage:
+    cron_tool = ctx.loop.tools.get("cron") if getattr(ctx, "loop", None) else None
+    if cron_tool is None:
+        content = "Cron tool is not available in this runtime."
+    else:
+        content = cron_tool._add_job(
+            name="ai-intel-daily",
+            message="Run ai_intel daily_brief and deliver the result.",
+            every_seconds=None,
+            cron_expr="0 8 * * *",
+            tz=getattr(ctx.loop.context, "timezone", "UTC"),
+            at=None,
+            deliver=True,
+        )
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
+    )
+
+
+async def cmd_intel_schedule_midday(ctx: CommandContext) -> OutboundMessage:
+    cron_tool = ctx.loop.tools.get("cron") if getattr(ctx, "loop", None) else None
+    if cron_tool is None:
+        content = "Cron tool is not available in this runtime."
+    else:
+        content = cron_tool._add_job(
+            name="ai-intel-midday",
+            message="Run ai_intel midday_recap and deliver the result.",
+            every_seconds=None,
+            cron_expr="0 15 * * *",
+            tz=getattr(ctx.loop.context, "timezone", "UTC"),
+            at=None,
+            deliver=True,
+        )
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata={**dict(ctx.msg.metadata or {}), "render_as": "text"},
+    )
+
 
 
 def build_help_text() -> str:
@@ -445,6 +490,8 @@ def build_help_text() -> str:
         "/intel-daily — Generate AI tech daily brief",
         "/intel-recap — Generate AI tech midday recap",
         "/intel-refresh — Refresh AI intel snapshot and counts",
+        "/intel-schedule-daily — Create a daily AI intel cron job",
+        "/intel-schedule-midday — Create a midday AI intel cron job",
     ]
     return "\n".join(lines)
 
@@ -467,3 +514,5 @@ def register_builtin_commands(router: CommandRouter) -> None:
     router.exact("/intel-daily", cmd_intel_daily)
     router.exact("/intel-recap", cmd_intel_recap)
     router.exact("/intel-refresh", cmd_intel_refresh)
+    router.exact("/intel-schedule-daily", cmd_intel_schedule_daily)
+    router.exact("/intel-schedule-midday", cmd_intel_schedule_midday)

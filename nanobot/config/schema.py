@@ -215,6 +215,7 @@ class ExecToolConfig(Base):
     sandbox: str = ""  # sandbox backend: "" (none) or "bwrap"
     allowed_env_keys: list[str] = Field(default_factory=list)  # Env var names to pass through to subprocess (e.g. ["GOPATH", "JAVA_HOME"])
 
+
 class MCPServerConfig(Base):
     """MCP server connection configuration (stdio or HTTP)."""
 
@@ -227,11 +228,29 @@ class MCPServerConfig(Base):
     tool_timeout: int = 30  # seconds before a tool call is cancelled
     enabled_tools: list[str] = Field(default_factory=lambda: ["*"])  # Only register these tools; accepts raw MCP names or wrapped mcp_<server>_<tool> names; ["*"] = all tools; [] = no tools
 
+
 class MyToolConfig(Base):
     """Self-inspection tool configuration."""
 
     enable: bool = True  # register the `my` tool (agent runtime state inspection)
     allow_set: bool = False  # let `my` modify loop state (read-only if False)
+
+
+class AITelReportConfig(Base):
+    """Scheduling toggles for AI intel reports."""
+
+    enabled: bool = True
+    cron: str = "0 8 * * *"
+
+
+class AITechIntelConfig(Base):
+    """AI tech intelligence app configuration."""
+
+    enabled: bool = True
+    state_dir: str = ""
+    sources_path: str = ""
+    daily: AITelReportConfig = Field(default_factory=AITelReportConfig)
+    midday: AITelReportConfig = Field(default_factory=lambda: AITelReportConfig(cron="0 15 * * *"))
 
 
 class ToolsConfig(Base):
@@ -240,6 +259,7 @@ class ToolsConfig(Base):
     web: WebToolsConfig = Field(default_factory=WebToolsConfig)
     exec: ExecToolConfig = Field(default_factory=ExecToolConfig)
     my: MyToolConfig = Field(default_factory=MyToolConfig)
+    ai_intel: AITechIntelConfig = Field(default_factory=AITechIntelConfig)
     restrict_to_workspace: bool = False  # restrict all tool access to workspace directory
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
     ssrf_whitelist: list[str] = Field(default_factory=list)  # CIDR ranges to exempt from SSRF blocking (e.g. ["100.64.0.0/10"] for Tailscale)

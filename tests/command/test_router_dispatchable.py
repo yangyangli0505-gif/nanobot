@@ -28,6 +28,8 @@ class TestIsDispatchableCommand:
         assert router.is_dispatchable_command("/intel-daily")
         assert router.is_dispatchable_command("/intel-recap")
         assert router.is_dispatchable_command("/intel-refresh")
+        assert router.is_dispatchable_command("/intel-schedule-daily")
+        assert router.is_dispatchable_command("/intel-schedule-midday")
 
     def test_prefix_commands_match(self, router: CommandRouter) -> None:
         assert router.is_dispatchable_command("/dream-log abc123")
