@@ -19,6 +19,21 @@
   </p>
 </div>
 
+> [!IMPORTANT]
+> ## 这个 fork 改了什么（中文说明）
+> 这不是只改了几行配置的 fork。这个仓库已经把一个 **AI 科技情报能力** 真正接进了 nanobot：
+> - 新增内建模块：`nanobot/ai_intel/`
+> - 新增命令：`/intel-daily`、`/intel-recap`、`/intel-refresh`
+> - 新增定时能力：支持日报 / 午报自动 cron 推送
+> - 新增配置：`tools.aiIntel.*`
+> - 新增 Telegram/channel 投递链路
+>
+> 如果你想先看“这个 fork 到底二开了什么”，请直接看：
+> - **中文说明文档**：[`docs/AI_INTEL_FORK_ZH.md`](./docs/AI_INTEL_FORK_ZH.md)
+> - README 中的英文说明：`What this fork adds: AI Tech Intelligence integration`
+>
+> 一句话：**上游 nanobot 是通用 agent runtime；这个 fork 在它上面接入了一个 AI Tech Intelligence 应用层。**
+
 🐈 **nanobot** is an open-source and ultra-lightweight AI agent in the spirit of [OpenClaw](https://github.com/openclaw/openclaw), [Claude Code](https://www.anthropic.com/claude-code), and [Codex](https://www.openai.com/codex/). It keeps the core agent loop small and readable while still supporting chat channels, memory, MCP and practical deployment paths, so you can go from local setup to a long-running personal agent with minimal overhead.
 
 ## 📢 News
