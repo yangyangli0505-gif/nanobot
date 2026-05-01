@@ -286,6 +286,115 @@ In short:
 > upstream nanobot = general agent runtime  
 > this fork = nanobot runtime + built-in AI tech intelligence app
 
+### How to actually use it
+
+There are **two practical ways** to use this AI intelligence feature.
+
+#### Option 1: Use it manually in CLI
+
+If you just want to test or inspect the report manually:
+
+```bash
+nanobot agent
+```
+
+Then inside the session, use:
+
+- `/intel-daily` — generate the daily AI tech brief now
+- `/intel-recap` — generate the midday recap now
+- `/intel-refresh` — refresh snapshot + counts without a full report
+
+This mode is best for:
+- debugging
+- prompt / ranking inspection
+- checking whether the report quality is good enough
+
+#### Option 2: Run it as a long-running scheduled service
+
+If you want nanobot to automatically deliver the reports through a channel such as Telegram:
+
+```bash
+nanobot gateway
+```
+
+This mode is for:
+- Telegram / other channel delivery
+- scheduled daily brief
+- scheduled midday recap
+- long-running background use
+
+### Required config for scheduled delivery
+
+To make scheduled delivery work, you need **both**:
+
+1. a working channel config (for example Telegram bot token)
+2. an AI intel config block telling nanobot where and when to deliver
+
+Example:
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "<your-bot-token>",
+      "allowFrom": ["<your-chat-id>"]
+    }
+  },
+  "tools": {
+    "aiIntel": {
+      "enabled": true,
+      "channel": "telegram",
+      "chatId": "<your-chat-id>",
+      "daily": {
+        "enabled": true,
+        "cron": "0 8 * * *"
+      },
+      "midday": {
+        "enabled": true,
+        "cron": "0 15 * * *"
+      }
+    }
+  }
+}
+```
+
+### What happens after gateway starts
+
+When `nanobot gateway` starts with the config above, this fork can automatically register:
+
+- `ai-intel-daily`
+- `ai-intel-midday`
+
+Then nanobot will:
+- run the intelligence pipeline on schedule
+- generate the brief
+- deliver it through the configured channel
+
+### Manual scheduling commands
+
+If you prefer to create jobs interactively instead of relying on startup auto-registration, you can also use:
+
+- `/intel-schedule-daily`
+- `/intel-schedule-midday`
+
+### Best way to test it first
+
+A practical verification order is:
+
+1. configure your Telegram bot / target channel
+2. start `nanobot gateway`
+3. manually send `/intel-daily`
+4. confirm the report comes back correctly
+5. then let the scheduled jobs run automatically
+
+That way you verify **channel**, **report generation**, and **cron delivery** one by one instead of debugging everything at once.
+
 ### Current status
 
 This integration already includes:
